@@ -90,10 +90,10 @@ Dans un terminal :
 kubectl -n tuwunel port-forward --address 127.0.0.1 service/tuwunel 18008:8008
 ```
 
-Dans un autre terminal, depuis un checkout de `muskeg/muskeg-platform` :
+Dans un autre terminal, depuis la racine de ce dépôt :
 
 ```sh
-python3 bootstrap/matrix-account.py raph --admin
+python3 workloads/tuwunel/matrix-account.py raph --admin
 ```
 
 Le script demande le mot de passe, lit le secret via `kubectl`, et ne publie ni
