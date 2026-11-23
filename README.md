@@ -8,8 +8,10 @@ The public `muskeg-platform` repository manages cluster and platform components.
 
 Create an `argocd-github` item in the `muskeg-platform` 1Password vault with:
 
-- `username`: a GitHub username with access to the private application repositories
-- `token`: a fine-grained PAT with read-only **Contents** permission for `homelab-apps` and each workload repository Argo must read
+- `github-username`: a custom text field containing a GitHub username with access to the private application repositories
+- `github-token`: a custom concealed field containing a fine-grained PAT with read-only **Contents** permission for `homelab-apps` and each workload repository Argo must read
+
+Use these exact custom field names. Do not use the item's built-in `username` field; External Secrets can otherwise find multiple fields with that label.
 
 Then bootstrap this repository from a local checkout:
 
