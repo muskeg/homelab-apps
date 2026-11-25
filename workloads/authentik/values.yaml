@@ -1,0 +1,80 @@
+global:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  deploymentStrategy:
+    type: Recreate
+  env:
+    - name: AUTHENTIK_POSTGRESQL__HOST
+      value: authentik-postgresql
+    - name: AUTHENTIK_POSTGRESQL__PORT
+      value: "5432"
+    - name: AUTHENTIK_POSTGRESQL__NAME
+      value: authentik
+    - name: AUTHENTIK_POSTGRESQL__USER
+      value: authentik
+    - name: AUTHENTIK_POSTGRESQL__SSLMODE
+      value: disable
+    - name: AUTHENTIK_WEB__BASE_URL
+      value: https://auth.k8s.muskegg.com
+    - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+      value: "false"
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: authentik-data
+  volumeMounts:
+    - name: data
+      mountPath: /data
+
+authentik:
+  existingSecret:
+    secretName: authentik-config
+
+server:
+  replicas: 1
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    hosts:
+      - auth.k8s.muskegg.com
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+worker:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: authentik-postgresql
+  primary:
+    persistence:
+      enabled: true
+      existingClaim: authentik-postgresql
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
+
+serviceAccount:
+  create: true

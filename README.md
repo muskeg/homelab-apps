@@ -27,6 +27,12 @@ The repository-credential Secret uses the `repo-creds` form, so Argo CD can auth
 
 After bootstrap, commit Application manifests under `apps/`. The `homelab-apps` root Application is automated and self-healing, and Argo CD will create and reconcile them.
 
+The repository currently includes private registrations and workloads for:
+
+- Stonks at `stonks.k8s.muskegg.com`
+- Tuwunel at `matrix.muskeg.dev`
+- Authentik at `auth.k8s.muskegg.com`
+
 ## Adding an application
 
 Add a file such as:
