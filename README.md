@@ -33,6 +33,11 @@ The repository currently includes private registrations and workloads for:
 - Tuwunel at `matrix.muskeg.dev`
 - Authentik at `auth.k8s.muskegg.com`
 
+Before deploying Authentik, follow
+[`workloads/authentik/README.md`](workloads/authentik/README.md) to create the
+required 1Password item, initialize `akadmin`, and configure OIDC providers for
+dependent applications.
+
 ## Adding an application
 
 Add a file such as:
