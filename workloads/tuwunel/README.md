@@ -84,6 +84,33 @@ L'inscription publique reste **désactivée**. Les comptes sont créés par
 l'endpoint interne d'inscription à secret partagé ; `/_synapse` et les autres
 API administratives ne sont pas exposés par l'Ingress.
 
+## Isolation réseau
+
+Le namespace accepte uniquement les entrées Traefik vers le port 8008. Les
+sorties autorisées sont limitées à DNS dans `kube-system` et à Matrix federation
+sur les ports publics 443 et 8448. Les plages privées, le réseau des pods, les
+Services Kubernetes et le LAN restent interdits en sortie.
+
+Calico doit d'abord être prêt sur tous les nœuds. Le déploiement se fait donc en
+deux étapes : synchroniser l'application `calico` du dépôt `muskeg-platform`,
+puis synchroniser Tuwunel.
+
+```sh
+kubectl -n argocd get application calico
+kubectl -n kube-system rollout status daemonset/calico-node --timeout=10m
+kubectl -n kube-system rollout status deployment/calico-typha --timeout=5m
+kubectl -n kube-system rollout status deployment/calico-kube-controllers --timeout=5m
+```
+
+Tous ces composants doivent être prêts avant de réconcilier Tuwunel. Recréer
+ensuite son pod pour que Calico enregistre le workload :
+
+```sh
+kubectl -n tuwunel rollout restart deployment/tuwunel
+kubectl -n tuwunel rollout status deployment/tuwunel --timeout=10m
+kubectl -n tuwunel get networkpolicy
+```
+
 Dans un terminal :
 
 ```sh
@@ -118,6 +145,23 @@ curl -fsS https://matrix.muskeg.dev/.well-known/matrix/client
 curl -fsS https://matrix.muskeg.dev/.well-known/matrix/server
 curl -fsS https://matrix.muskeg.dev/_matrix/federation/v1/version
 ```
+
+Vérifier également qu'un pod sans label Traefik ne peut pas joindre le Service
+Tuwunel, tandis qu'un accès depuis Traefik fonctionne :
+
+```sh
+kubectl run netpol-denied --image=curlimages/curl:8.17.0 \
+  --restart=Never -- sleep 1h
+kubectl wait pod/netpol-denied --for=condition=Ready --timeout=60s
+kubectl exec netpol-denied -- \
+  curl --connect-timeout 3 --max-time 5 \
+  http://tuwunel.tuwunel.svc.cluster.local:8008/_matrix/client/versions \
+  && echo "ERREUR : accès inattendu" || echo "Accès refusé comme attendu"
+kubectl delete pod/netpol-denied
+```
+
+Tester ensuite un serveur Matrix fédéré connu. La connexion HTTPS publique doit
+rester fonctionnelle, tandis que les adresses privées doivent échouer.
 
 Les versions doivent annoncer `org.matrix.simplified_msc3575: true`.
 Le pod désactive `enableServiceLinks` : sinon Kubernetes injecte une variable
