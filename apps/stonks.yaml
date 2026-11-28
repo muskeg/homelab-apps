@@ -7,10 +7,13 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/muskeg/stonks.git
-    targetRevision: main
-    path: deploy/kubernetes
+  sources:
+    - repoURL: https://github.com/muskeg/stonks.git
+      targetRevision: main
+      path: deploy/kubernetes
+    - repoURL: https://github.com/muskeg/homelab-apps.git
+      targetRevision: main
+      path: workloads/stonks
   destination:
     server: https://kubernetes.default.svc
     namespace: stonks
